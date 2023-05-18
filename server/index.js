@@ -6,7 +6,10 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
-const PORT=8080;
+const PORT=3000;
+const mongoose = require('mongoose');
+const dotenv=require('dotenv')
+dotenv.config()
 const fakeData= [
     {
         id:1,
@@ -40,6 +43,13 @@ const fakeData= [
     },
 ]
 
+//mongo database connection
+console.log(process.env.DB_CONNECTION)
+DB_CONNECTION=process.env.DB_CONNECTION
+DB_CONNECTION=DB_CONNECTION.replace('')
+mongoose.connect('mongodb+srv://ilaha:ilaha2002@database.jbmanhz.mongodb.net/?retryWrites=true&w=majority')
+.then(() => console.log('Connected!'));
+
 //get All Student
 app.get("/api/students", (req, res) => {
     const { name } = req.query;
@@ -59,9 +69,8 @@ app.get("/api/students", (req, res) => {
   //get Students by ID
   app.get("/api/students/:id", (req, res) => {
     const id = req.params.id;
-    const student = fakeData.find((x) => x.id === parseInt(id));
+    const student = fakeData.find((x) => x.id == id);
     if (!student) {
-      console.log("test");
       res.status(204).send("student not found!");
       // return;
     } else {
