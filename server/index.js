@@ -10,56 +10,68 @@ const PORT=3000;
 const mongoose = require('mongoose');
 const dotenv=require('dotenv')
 dotenv.config()
-const fakeData= [
-    {
-        id:1,
-        name: "alis",
-        surname:"xsxs",
-        birthdate:"2002",
-        faculty:"biology",
-        occupation:"biology",
-        isMarried:"true",
-        GPA:70
-    },
-    {
-        id:2,
-        name: "ali",
-        surname:"sxxsxs",
-        birthdate:"2001",
-        faculty:"fizik",
-        occupation:"fizika",
-        isMarried:"false",
-        GPA:80
-    },
-    {
-        id:3,
-        name: "yazgul",
-        surname:"Mammadli",
-        birthdate:"2002",
-        faculty:"TRK",
-        occupation:"informatika",
-        isMarried:"false",
-        GPA:90
-    },
-]
+// const fakeData= [
+//     {
+//         id:1,
+//         name: "alis",
+//         surname:"xsxs",
+//         birthdate:"2002",
+//         faculty:"biology",
+//         occupation:"biology",
+//         isMarried:"true",
+//         GPA:70
+//     },
+//     {
+//         id:2,
+//         name: "ali",
+//         surname:"sxxsxs",
+//         birthdate:"2001",
+//         faculty:"fizik",
+//         occupation:"fizika",
+//         isMarried:"false",
+//         GPA:80
+//     },
+//     {
+//         id:3,
+//         name: "yazgul",
+//         surname:"Mammadli",
+//         birthdate:"2002",
+//         faculty:"TRK",
+//         occupation:"informatika",
+//         isMarried:"false",
+//         GPA:90
+//     },
+// ]
 
 //mongo database connection
-console.log(process.env.DB_CONNECTION)
-DB_CONNECTION=process.env.DB_CONNECTION
-DB_CONNECTION=DB_CONNECTION.replace('')
+// console.log(process.env.DB_CONNECTION)
+// DB_CONNECTION=process.env.DB_CONNECTION
+// DB_CONNECTION=DB_CONNECTION.replace('')
 mongoose.connect('mongodb+srv://ilaha:ilaha2002@database.jbmanhz.mongodb.net/?retryWrites=true&w=majority')
 .then(() => console.log('Connected!'));
+const studentSchema = new mongoose.Schema({
+  name: String,
+  surname:String,
+  birthdate:Number,
+  faculty:String,
+  occupation: String,
+  isMarried:Boolean,
+  GPA:Number
+});
 
+const StudentModel = mongoose.model('Students',studentSchema);
+//Song
 //get All Student
-app.get("/api/students", (req, res) => {
+app.get("/api/students",async (req, res) => {
     const { name } = req.query;
+    const students = await StudentModel.find();
     if (name === undefined) {
       res.status(200).send({
-        data: fakeData,
+        data: students,
       });
     } else {
       res.status(200).send({
-        data: fakeData.filter(
+        data: students.filter(
           (x) => x.name.toLowerCase().trim().includes(name.toLowerCase().trim())
         ),
         message: "data get success!",
@@ -67,9 +79,10 @@ app.get("/api/students", (req, res) => {
     }
   });
   //get Students by ID
-  app.get("/api/students/:id", (req, res) => {
+  app.get("/api/students/:id",async (req, res) => {
     const id = req.params.id;
-    const student = fakeData.find((x) => x.id == id);
+    const student = await StudentModel.findById(id);
+ 
     if (!student) {
       res.status(204).send("student not found!");
       // return;
@@ -81,9 +94,9 @@ app.get("/api/students", (req, res) => {
     }
   });
   //delete student by ID
-  app.delete("/api/students/:id", (req, res) => {
+  app.delete("/api/students/:id", async (req, res) => {
     const id = req.params.id;
-    const student = fakeData.find((x) => x.id == id);
+    const student = await StudentModel.findByIdAndDelete(id);
     if (student === undefined) {
       res.status(404).send("student not found");
     } else {
@@ -96,10 +109,9 @@ app.get("/api/students", (req, res) => {
     }
   });
   //post
-  app.post("/api/students",(req, res) => {
+  app.post("/api/students", async(req, res) => {
     const { name, surname, birthdate,faculty, occupation, isMarried, GPA } = req.body;
-    const newStudent = {
-      id: crypto.randomUUID(),
+    const newStudent =new StudentModel( {
       name: name,
       surname: surname,
       birthdate: birthdate,
@@ -107,8 +119,8 @@ app.get("/api/students", (req, res) => {
       occupation: occupation,
       isMarried: isMarried,
       GPA: GPA,
-    };
-    fakeData.push(newStudent);
+    });
+    await newStudent.save();
     res.status(201).send("created");
   });
   //put
